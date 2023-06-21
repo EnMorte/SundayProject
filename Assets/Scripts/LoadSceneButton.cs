@@ -1,10 +1,9 @@
 using UnityEngine;
-using UnityEngine.Events;
 using UnityEngine.UI;
 
 public class LoadSceneButton : MonoBehaviour
 {
-    public EScene targetScene;
+    [SerializeField] private EScene targetScene;
     private Button _button;
     
     private void Start()
