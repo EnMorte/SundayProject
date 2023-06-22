@@ -16,7 +16,7 @@ public class LoadingController : MonoBehaviour
     private static EScene _targetScene;
     [SerializeField] private float loadingDelayTimer;
     
-    void Start()
+    private void Start()
     {
         StartCoroutine(LoadSceneAsync());
     }
@@ -27,7 +27,7 @@ public class LoadingController : MonoBehaviour
         SceneManager.LoadScene((int)EScene.Loading, LoadSceneMode.Additive);
     }
     
-    IEnumerator LoadSceneAsync()
+    private IEnumerator LoadSceneAsync()
     {
         AsyncOperation operation = SceneManager.LoadSceneAsync((int)_targetScene);
         operation.allowSceneActivation = false;
