@@ -10,5 +10,12 @@ public class ImageConstructor : MonoBehaviour
     {
         _imageComponent = GetComponent<Image>();
         _imageComponent.sprite = image;
+        _imageComponent.color = new Color(255, 255, 255, 255);
+        DisableSpinner();
+    }
+
+    private void DisableSpinner()
+    {
+        GetComponentInChildren<SpinnerRotation>().gameObject.SetActive(false);
     }
 }

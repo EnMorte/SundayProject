@@ -1,60 +1,65 @@
 using System.Collections;
+using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Networking;
 
 public class ImageDownloader : MonoBehaviour
 {
-    [SerializeField] private GameObject _imagePrefab;
+    [SerializeField] private GameObject imagePrefab;
+    [SerializeField] private int imagesCount;
+    [SerializeField] private string directoryURL = "http://data.ikppbb.com/test-task-unity-data/pics/";
+    [SerializeField] private string fileExtension = ".jpg";
+    
     private Sprite _image;
     private int _imageIndex = 1;
-    private string _directoryURL = "http://data.ikppbb.com/test-task-unity-data/pics/";
-    private string _fileExtension = ".jpg";
     private Coroutine _generateImages;
-    private bool _continueGenerating;
-    
+    private Dictionary<GameObject, UnityWebRequest> _imagesAndRequests = new();
+
     private void Start()
     {
-        _generateImages = StartCoroutine(GenerateImages());
+        CreateImagesAndRequests(imagesCount);
+        _generateImages = StartCoroutine(SendRequests());
     }
-
-    private IEnumerator GenerateImages()
+    
+    private void CreateImagesAndRequests(int requestsCount)
     {
-        _continueGenerating = true;
-        
-        while (_continueGenerating)
+        for (var i = 0; i < requestsCount; i++)
         {
             string imageURL = CreateImageURL(_imageIndex);
-            yield return StartCoroutine(DownloadImage(imageURL));
-            
-            CreateImagePrefab();
+            UnityWebRequest request = UnityWebRequestTexture.GetTexture(imageURL);
+            _imagesAndRequests.Add(CreateImagePrefab(), request);
             _imageIndex++;
-            
-            
         }
+        
+        Debug.Log(_imagesAndRequests.Count);
     }
 
-    private GameObject CreateImagePrefab()
+    private IEnumerator SendRequests()
     {
-        GameObject newImage = Instantiate(_imagePrefab, transform);
-        newImage.GetComponent<ImageConstructor>().SetImage(_image);
-        return newImage;
+        foreach ((GameObject prefab, UnityWebRequest request) in _imagesAndRequests)
+        {
+            yield return request.SendWebRequest();
+            
+            if (request.result == UnityWebRequest.Result.Success)
+                SaveImage(((DownloadHandlerTexture)request.downloadHandler).texture);
+            else
+                StopImageGeneration(request);
+            
+            SetImage(prefab);
+        }
     }
 
     private string CreateImageURL(int imageIndex)
     {
-        string imageURL = _directoryURL + imageIndex + _fileExtension;
+        string imageURL = directoryURL + imageIndex + fileExtension;
         return imageURL;
     }
     
-    private IEnumerator DownloadImage(string imageURL)
-    {
-        UnityWebRequest request = UnityWebRequestTexture.GetTexture(imageURL);
-        yield return request.SendWebRequest();
 
-        if (request.result == UnityWebRequest.Result.Success)
-            SaveImage(((DownloadHandlerTexture)request.downloadHandler).texture);
-        else
-            StopImageGeneration(request);
+    private GameObject CreateImagePrefab()
+    {
+        GameObject newImagePrefab = Instantiate(imagePrefab, transform);
+        return newImagePrefab;
     }
 
     private void SaveImage(Texture2D texture)
@@ -68,6 +73,10 @@ public class ImageDownloader : MonoBehaviour
     {
         Debug.Log(request.error);
         StopCoroutine(_generateImages);
-        _continueGenerating = false;
+    }
+
+    private void SetImage(GameObject prefab)
+    {
+        prefab.GetComponent<ImageConstructor>().SetImage(_image);
     }
 }
