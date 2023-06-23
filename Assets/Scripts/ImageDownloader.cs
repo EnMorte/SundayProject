@@ -1,4 +1,3 @@
-using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Networking;
@@ -12,13 +11,12 @@ public class ImageDownloader : MonoBehaviour
     
     private Sprite _image;
     private int _imageIndex = 1;
-    private Coroutine _generateImages;
     private Dictionary<GameObject, UnityWebRequest> _imagesAndRequests = new();
 
     private void Start()
     {
         CreateImagesAndRequests(imagesCount);
-        _generateImages = StartCoroutine(SendRequests());
+        SaveRequestToPrefab();
     }
     
     private void CreateImagesAndRequests(int requestsCount)
@@ -30,25 +28,14 @@ public class ImageDownloader : MonoBehaviour
             _imagesAndRequests.Add(CreateImagePrefab(), request);
             _imageIndex++;
         }
-        
-        Debug.Log(_imagesAndRequests.Count);
     }
-
-    private IEnumerator SendRequests()
+    
+    private void SaveRequestToPrefab()
     {
         foreach ((GameObject prefab, UnityWebRequest request) in _imagesAndRequests)
-        {
-            yield return request.SendWebRequest();
-            
-            if (request.result == UnityWebRequest.Result.Success)
-                SaveImage(((DownloadHandlerTexture)request.downloadHandler).texture);
-            else
-                StopImageGeneration(request);
-            
-            SetImage(prefab);
-        }
+            prefab.GetComponent<ImageConstructor>().SaveRequest(request);
     }
-
+    
     private string CreateImageURL(int imageIndex)
     {
         string imageURL = directoryURL + imageIndex + fileExtension;
@@ -62,21 +49,30 @@ public class ImageDownloader : MonoBehaviour
         return newImagePrefab;
     }
 
-    private void SaveImage(Texture2D texture)
+    /*private IEnumerator SendRequests()
+    {
+        foreach ((GameObject prefab, UnityWebRequest request) in _imagesAndRequests)
+        {
+            yield return request.SendWebRequest();
+            
+            if (request.result == UnityWebRequest.Result.Success)
+                SaveRequestToPrefab();
+                //SaveImage(((DownloadHandlerTexture)request.downloadHandler).texture);
+            else
+                StopImageGeneration(request);
+        }
+    }*/
+
+    /*private void SaveImage(Texture2D texture)
     {
         var rect = new Rect(0, 0, texture.width, texture.height);
         var pivot = new Vector2(0.5f, 0.5f);
         _image = Sprite.Create(texture, rect, pivot);
-    }
+    }*/
 
-    private void StopImageGeneration(UnityWebRequest request)
+    /*private void StopImageGeneration(UnityWebRequest request)
     {
         Debug.Log(request.error);
         StopCoroutine(_generateImages);
-    }
-
-    private void SetImage(GameObject prefab)
-    {
-        prefab.GetComponent<ImageConstructor>().SetImage(_image);
-    }
+    }*/
 }
