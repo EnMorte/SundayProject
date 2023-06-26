@@ -1,15 +1,16 @@
 using System.Collections;
 using UnityEngine;
+using UnityEngine.Events;
 using UnityEngine.Networking;
 using UnityEngine.UI;
 
 public class ImageConstructor : MonoBehaviour
 {
-    private Sprite _image;
-    private Image _imageComponent;
+    private Sprite _imageSprite;
+    private Image _image;
 
-    private RectTransform _rect;
-    private RectTransform _scrollView;
+    private RectTransform _rectTransform;
+    private RectTransform _scrollViewRectTransform;
     private Vector2 _relativePosition;
     private bool _imageSet;
 
@@ -18,6 +19,8 @@ public class ImageConstructor : MonoBehaviour
 
     private GameObject _spinner;
 
+    public UnityEvent<GameObject> onImageSet;
+
     private void Start()
     {
         Init();
@@ -25,10 +28,11 @@ public class ImageConstructor : MonoBehaviour
     
     private void Init()
     {
-        _imageComponent = GetComponent<Image>();
-        _rect = GetComponent<RectTransform>();
-        _scrollView = FindObjectOfType<ScrollRect>().gameObject.GetComponent<RectTransform>();
+        _image = GetComponent<Image>();
+        _rectTransform = GetComponent<RectTransform>();
+        _scrollViewRectTransform = FindObjectOfType<ScrollRect>().gameObject.GetComponent<RectTransform>();
         _spinner = GetComponentInChildren<SpinnerRotation>().gameObject;
+        onImageSet ??= new UnityEvent<GameObject>();
     }
 
     public void SaveRequest(UnityWebRequest request)
@@ -52,12 +56,12 @@ public class ImageConstructor : MonoBehaviour
     private void CalculateRelativePosition()
     {
         RectTransformUtility.ScreenPointToLocalPointInRectangle(
-            _scrollView, _rect.position, null, out _relativePosition);
+            _scrollViewRectTransform, _rectTransform.position, null, out _relativePosition);
     }
 
     private bool IsOutsideView(Vector2 localPoint)
     {
-        return !_scrollView.rect.Contains(localPoint);
+        return !_scrollViewRectTransform.rect.Contains(localPoint);
     }
     
     private IEnumerator DownloadImage()
@@ -69,13 +73,14 @@ public class ImageConstructor : MonoBehaviour
         else
             StopAndReport(_request);
         
-        SetImage(_image);
+        SetImage(_imageSprite);
+        onImageSet.Invoke(gameObject);
     }
     
     private void SetImage(Sprite image)
     {
-        _imageComponent.sprite = image;
-        _imageComponent.color = new Color(255, 255, 255, 255);
+        _image.sprite = image;
+        _image.color = new Color(255, 255, 255, 255);
         DisableSpinner();
         _imageSet = true;
     }
@@ -89,7 +94,7 @@ public class ImageConstructor : MonoBehaviour
     {
         var rect = new Rect(0, 0, texture.width, texture.height);
         var pivot = new Vector2(0.5f, 0.5f);
-        _image = Sprite.Create(texture, rect, pivot);
+        _imageSprite = Sprite.Create(texture, rect, pivot);
     }
 
     private void StopAndReport(UnityWebRequest request)
