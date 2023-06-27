@@ -1,20 +1,26 @@
 using System.Collections;
+using System.Net.Mime;
+using TMPro;
 using UnityEngine;
 using UnityEngine.SceneManagement;
+using UnityEngine.UIElements;
+using Image = UnityEngine.UI.Image;
 
 public enum EScene
 {
     MainMenu = 0,
     Loading = 1,
     Gallery = 2,
-    Vehicle = 3,
-    Rotation = 4,
+    Rotation = 3,
+    Vehicle = 4,
     Humanoid = 5
 }
 public class LoadingController : MonoBehaviour
 {
     private static EScene _targetScene;
     [SerializeField] private float loadingDelayTimer;
+    [SerializeField] private Image progressBar;
+    [SerializeField] private TextMeshProUGUI progressValue;
     
     private void Start()
     {
@@ -37,11 +43,27 @@ public class LoadingController : MonoBehaviour
             if (operation.progress >= 0.9f)
                 break;
 
+            UpdateProgressValue(operation.progress);
+            UpdateProgressBar(operation.progress);
+
             yield return null;
         }
+        
+        UpdateProgressValue(operation.progress);
+        UpdateProgressBar(operation.progress);
         
         yield return new WaitForSeconds(loadingDelayTimer); //Delay is demanded by test assignment and confirmed in hh.ru messaging
 
         operation.allowSceneActivation = true;
+    }
+
+    private void UpdateProgressValue(float value)
+    {
+        progressValue.text = value * 100 + "%";
+    }
+
+    private void UpdateProgressBar(float value)
+    {
+        progressBar.fillAmount = value;
     }
 }
