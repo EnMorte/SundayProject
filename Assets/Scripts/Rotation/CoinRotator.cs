@@ -1,11 +1,14 @@
 using UnityEngine;
 
-public class CoinRotator : MonoBehaviour
+namespace Rotation
 {
-    [SerializeField] private float rotationSpeed;
-    
-    private void Update()
+    public class CoinRotator : MonoBehaviour
     {
-        transform.Rotate(Vector3.back, rotationSpeed * Time.deltaTime);
+        [SerializeField] private float rotationSpeed;
+    
+        private void Update()
+        {
+            transform.Rotate(Vector3.back, rotationSpeed * Time.deltaTime);
+        }
     }
 }
